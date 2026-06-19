@@ -40,7 +40,8 @@ export async function POST(req: NextRequest) {
 
     return Response.json(structured);
   } catch (error) {
-    console.error("OCR error:", error);
-    return Response.json({ error: "OCR processing failed" }, { status: 500 });
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("OCR error:", msg);
+    return Response.json({ error: msg }, { status: 500 });
   }
 }

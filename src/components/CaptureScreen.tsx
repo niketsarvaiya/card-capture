@@ -45,13 +45,14 @@ export default function CaptureScreen() {
         body: JSON.stringify({ image: base64 }),
       });
 
-      if (!res.ok) throw new Error("OCR failed");
-
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `OCR failed (${res.status})`);
+
       setLead({ ...emptyLead, ...data });
       setStatus("review");
-    } catch {
-      setErrorMsg("Failed to read card. Try again or enter details manually.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      setErrorMsg(`Error: ${msg}`);
       setLead(emptyLead);
       setStatus("review");
     }

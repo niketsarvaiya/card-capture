@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
       visionData.responses?.[0]?.fullTextAnnotation?.text || "";
 
     if (!rawText) {
+      console.error("Vision API response:", JSON.stringify(visionData));
       return Response.json({ error: "No text found on card" }, { status: 400 });
     }
 

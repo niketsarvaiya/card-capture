@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
-import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 
-function getOpenAI() {
-  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+function getClient() {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 }
 
 export async function POST(req: NextRequest) {
@@ -34,23 +34,22 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "No text found on card" }, { status: 400 });
     }
 
-    // Step 2: AI structuring
-    const completion = await getOpenAI().chat.completions.create({
-      model: "gpt-4o-mini",
+    // Step 2: Claude structures the text
+    const message = await getClient().messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 512,
       messages: [
         {
-          role: "system",
-          content: `Extract contact details from this business card text. Return ONLY valid JSON with these fields: name, phone, email, company, designation, website, address. Use empty string for missing fields. For phone, include country code if visible. Clean up formatting.`,
+          role: "user",
+          content: `Extract contact details from this business card text. Return ONLY valid JSON with these fields: name, phone, email, company, designation, website, address. Use empty string for missing fields. For phone, include country code if visible. Clean up formatting.\n\nCard text:\n${rawText}`,
         },
-        { role: "user", content: rawText },
       ],
-      response_format: { type: "json_object" },
-      temperature: 0,
     });
 
-    const structured = JSON.parse(
-      completion.choices[0].message.content || "{}"
-    );
+    const content = message.content[0];
+    const text = content.type === "text" ? content.text : "";
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const structured = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
 
     return Response.json(structured);
   } catch (error) {

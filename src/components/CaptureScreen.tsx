@@ -121,32 +121,16 @@ export default function CaptureScreen() {
     }
   }
 
-  function saveToPhone() {
-    const nameParts = lead.name.trim().split(/\s+/);
-    const firstName = nameParts[0] || "";
-    const lastName = nameParts.slice(1).join(" ");
-    const vcf = [
-      "BEGIN:VCARD",
-      "VERSION:3.0",
-      `N:${lastName};${firstName};;;`,
-      `FN:${lead.name}`,
-      lead.phone ? `TEL;TYPE=CELL:${lead.phone}` : "",
-      lead.email ? `EMAIL:${lead.email}` : "",
-      lead.company ? `ORG:${lead.company}` : "",
-      lead.designation ? `TITLE:${lead.designation}` : "",
-      lead.website ? `URL:${lead.website}` : "",
-      lead.address ? `ADR;TYPE=WORK:;;${lead.address.replace(/\n/g, " ")};;;;` : "",
-      lead.notes ? `NOTE:${lead.notes.replace(/\n/g, " ")}` : "",
-      "END:VCARD",
-    ].filter(Boolean).join("\n");
-
-    const blob = new Blob([vcf], { type: "text/vcard" });
+  async function saveToPhone() {
+    const res = await fetch("/api/vcard", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(lead),
+    });
+    const blob = await res.blob();
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${lead.name || "contact"}.vcf`;
-    a.click();
-    URL.revokeObjectURL(url);
+    window.location.href = url;
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
   }
 
   function reset() {

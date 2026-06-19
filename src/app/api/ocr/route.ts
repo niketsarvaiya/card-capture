@@ -9,40 +9,26 @@ export async function POST(req: NextRequest) {
   try {
     const { image } = await req.json();
 
-    // Step 1: Google Vision OCR
-    const visionRes = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${process.env.GOOGLE_VISION_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          requests: [
-            {
-              image: { content: image },
-              features: [{ type: "TEXT_DETECTION" }],
-            },
-          ],
-        }),
-      }
-    );
-
-    const visionData = await visionRes.json();
-    const rawText =
-      visionData.responses?.[0]?.fullTextAnnotation?.text || "";
-
-    if (!rawText) {
-      console.error("Vision API response:", JSON.stringify(visionData));
-      return Response.json({ error: "No text found on card" }, { status: 400 });
-    }
-
-    // Step 2: Claude structures the text
     const message = await getClient().messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 512,
       messages: [
         {
           role: "user",
-          content: `Extract contact details from this business card text. Return ONLY valid JSON with these fields: name, phone, email, company, designation, website, address. Use empty string for missing fields. For phone, include country code if visible. Clean up formatting.\n\nCard text:\n${rawText}`,
+          content: [
+            {
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: "image/jpeg",
+                data: image,
+              },
+            },
+            {
+              type: "text",
+              text: `This is a photo of a business/visiting card. Extract all contact details and return ONLY valid JSON with these fields: name, phone, email, company, designation, website, address. Use empty string for missing fields. For phone, include country code if visible. Clean up formatting.`,
+            },
+          ],
         },
       ],
     });

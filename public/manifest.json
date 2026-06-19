@@ -1,11 +1,11 @@
 {
-  "name": "Card Capture",
-  "short_name": "CardCapture",
-  "description": "Exhibition lead collection from visiting cards",
+  "name": "My Digital Rolodex",
+  "short_name": "Rolodex",
+  "description": "Scan business cards, build your contact book",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "background_color": "#0a0a0f",
+  "theme_color": "#0a0a0f",
   "icons": [
     {
       "src": "/icon-192.png",

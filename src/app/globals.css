@@ -1,16 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #030712;
-  --foreground: #f8fafc;
-  --accent: #6366f1;
-  --accent-light: #818cf8;
-  --surface: #111827;
-  --surface-light: #1f2937;
-  --border: #1f2937;
-  --border-light: #374151;
-  --success: #10b981;
-  --danger: #ef4444;
+  --background: #0a0a0f;
+  --foreground: #f0f0f5;
+  --accent: #c8a962;
+  --accent-light: #dfc688;
+  --accent-dim: rgba(200, 169, 98, 0.15);
+  --surface: #13131a;
+  --surface-light: #1c1c26;
+  --border: #1e1e2a;
 }
 
 * {
@@ -27,8 +25,10 @@ input, textarea, select {
   font-size: 16px !important;
 }
 
+/* ─── Animations ─── */
+
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -38,18 +38,27 @@ input, textarea, select {
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.9); }
+  from { opacity: 0; transform: scale(0.92); }
   to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
+  from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes pulse-ring {
   0% { transform: scale(1); opacity: 0.4; }
-  100% { transform: scale(1.5); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes card-float {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-6px) rotate(1deg); }
 }
 
 @keyframes shimmer {
@@ -57,18 +66,9 @@ input, textarea, select {
   100% { background-position: 200% 0; }
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes bounce-subtle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-
-@keyframes gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+@keyframes gold-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(200, 169, 98, 0.15); }
+  50% { box-shadow: 0 0 35px rgba(200, 169, 98, 0.25); }
 }
 
 .animate-fade-in-up {
@@ -80,57 +80,56 @@ input, textarea, select {
 }
 
 .animate-scale-in {
-  animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .animate-slide-down {
   animation: slideDown 0.3s ease both;
 }
 
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
-.stagger-5 { animation-delay: 0.25s; }
-.stagger-6 { animation-delay: 0.3s; }
-.stagger-7 { animation-delay: 0.35s; }
-.stagger-8 { animation-delay: 0.4s; }
+.stagger-1 { animation-delay: 0.06s; }
+.stagger-2 { animation-delay: 0.12s; }
+.stagger-3 { animation-delay: 0.18s; }
+.stagger-4 { animation-delay: 0.24s; }
+.stagger-5 { animation-delay: 0.3s; }
+.stagger-6 { animation-delay: 0.36s; }
+.stagger-7 { animation-delay: 0.42s; }
+.stagger-8 { animation-delay: 0.48s; }
 
 .btn-press {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 .btn-press:active {
   transform: scale(0.97);
 }
 
 .glass {
-  background: rgba(17, 24, 39, 0.7);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(13, 13, 18, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 
-.gradient-border {
-  position: relative;
-}
-.gradient-border::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  -webkit-mask-composite: xor;
-  pointer-events: none;
+.gold-border {
+  border: 1px solid rgba(200, 169, 98, 0.2);
 }
 
-.input-glow:focus-within {
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+.gold-border-strong {
+  border: 1px solid rgba(200, 169, 98, 0.35);
 }
 
-.shimmer-bg {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+.input-focus:focus-within {
+  border-color: rgba(200, 169, 98, 0.4);
+  box-shadow: 0 0 0 3px rgba(200, 169, 98, 0.08);
+}
+
+.card-shadow {
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    0 0 40px rgba(200, 169, 98, 0.05);
+}
+
+.shimmer-line {
+  background: linear-gradient(90deg, transparent, rgba(200, 169, 98, 0.08), transparent);
   background-size: 200% 100%;
-  animation: shimmer 2s infinite;
+  animation: shimmer 2.5s infinite;
 }

@@ -139,6 +139,7 @@ export default function CaptureScreen() {
       {status === "idle" && (
         <div className="flex-1 flex flex-col items-center justify-center px-6 gap-4">
           <p className="text-slate-400 text-center mb-4">Take a photo or upload a visiting card</p>
+          <p className="text-xs text-slate-600 mb-2">v2.1 — Claude Vision</p>
 
           <button
             onClick={() => cameraInputRef.current?.click()}

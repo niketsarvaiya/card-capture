@@ -112,7 +112,7 @@ export default function CaptureScreen() {
         localStorage.setItem("rolodex_count", String(count));
       }
       if (choice === "phone" || choice === "both") {
-        saveToPhone();
+        await saveToPhone();
       }
       setStatus("success");
     } catch {
@@ -296,7 +296,7 @@ export default function CaptureScreen() {
       )}
 
       {/* ─── Review ─── */}
-      {(status === "review" || status === "saving") && (
+      {(status === "review" || status === "saving" || status === "choosing") && (
         <div className="flex-1 overflow-y-auto">
           <div className="px-5 py-5">
             {/* Card image */}

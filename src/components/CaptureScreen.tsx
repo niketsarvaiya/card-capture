@@ -35,7 +35,7 @@ const fieldMeta: Record<keyof LeadData, { label: string; placeholder: string; ty
   notes: { label: "Notes", placeholder: "Met at booth, interested in...", type: "textarea" },
 };
 
-type Status = "idle" | "processing" | "review" | "saving" | "success";
+type Status = "idle" | "processing" | "review" | "saving" | "success" | "choosing";
 
 export default function CaptureScreen() {
   const [status, setStatus] = useState<Status>("idle");
@@ -89,22 +89,31 @@ export default function CaptureScreen() {
     setLead((prev) => ({ ...prev, [field]: value }));
   }
 
-  async function handleSave() {
+  function handleAddToRolodex() {
     if (!lead.name && !lead.phone && !lead.email) {
       setErrorMsg("Add at least a name, phone, or email");
       return;
     }
-    setStatus("saving");
     setErrorMsg("");
+    setStatus("choosing");
+  }
+
+  async function handleChoice(choice: "sheet" | "phone" | "both") {
+    setStatus("saving");
     try {
-      const res = await fetch("/api/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lead, image: imageData }),
-      });
-      if (!res.ok) throw new Error("Save failed");
-      const count = parseInt(localStorage.getItem("rolodex_count") || "0") + 1;
-      localStorage.setItem("rolodex_count", String(count));
+      if (choice === "sheet" || choice === "both") {
+        const res = await fetch("/api/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lead, image: imageData }),
+        });
+        if (!res.ok) throw new Error("Save to sheet failed");
+        const count = parseInt(localStorage.getItem("rolodex_count") || "0") + 1;
+        localStorage.setItem("rolodex_count", String(count));
+      }
+      if (choice === "phone" || choice === "both") {
+        saveToPhone();
+      }
       setStatus("success");
     } catch {
       setErrorMsg("Save failed — check connection");
@@ -164,23 +173,12 @@ export default function CaptureScreen() {
           <p className="text-gray-500 mb-8 text-sm">
             {lead.name || "New contact"} added to your Rolodex
           </p>
-          <div className="space-y-3 w-full max-w-xs">
-            <button
-              onClick={saveToPhone}
-              className="btn-press w-full py-4 bg-white/10 hover:bg-white/15 rounded-2xl font-semibold text-base transition-all flex items-center justify-center gap-2.5 border border-white/10"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-              </svg>
-              Save to Phone Contacts
-            </button>
-            <button
-              onClick={reset}
-              className="btn-press w-full py-4 bg-amber-600 hover:bg-amber-500 text-gray-950 rounded-2xl font-semibold text-base shadow-lg transition-all"
-            >
-              Scan Next Card
-            </button>
-          </div>
+          <button
+            onClick={reset}
+            className="btn-press px-10 py-4 bg-amber-600 hover:bg-amber-500 text-gray-950 rounded-2xl font-semibold text-base shadow-lg transition-all"
+          >
+            Scan Next Card
+          </button>
         </div>
       </div>
     );
@@ -371,25 +369,93 @@ export default function CaptureScreen() {
               })}
             </div>
 
-            {/* Save */}
+            {/* Add to Rolodex */}
             <button
-              onClick={handleSave}
-              disabled={status === "saving"}
-              className="btn-press w-full mt-7 mb-8 py-4 bg-amber-600 hover:bg-amber-500 text-gray-950 rounded-2xl font-semibold text-base shadow-lg shadow-amber-600/15 transition-all disabled:opacity-50 flex items-center justify-center gap-2.5"
+              onClick={handleAddToRolodex}
+              className="btn-press w-full mt-7 mb-8 py-4 bg-amber-600 hover:bg-amber-500 text-gray-950 rounded-2xl font-semibold text-base shadow-lg shadow-amber-600/15 transition-all flex items-center justify-center gap-2.5"
             >
-              {status === "saving" ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-gray-950 border-t-transparent rounded-full animate-[spin_0.8s_linear_infinite]" />
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Add to Rolodex
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Save Choice Modal ─── */}
+      {(status === "choosing" || status === "saving") && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center px-4 pb-6" onClick={() => status === "choosing" && setStatus("review")}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative w-full max-w-sm animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-gray-900 rounded-3xl border border-gray-800 overflow-hidden card-shadow">
+              <div className="px-6 pt-5 pb-3 text-center">
+                <p className="text-sm font-semibold text-gray-300">Save {lead.name || "contact"} to...</p>
+              </div>
+
+              <div className="px-4 pb-4 space-y-2">
+                <button
+                  onClick={() => handleChoice("sheet")}
+                  disabled={status === "saving"}
+                  className="btn-press w-full py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all flex items-center gap-3 px-4 disabled:opacity-50"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-green-600/20 flex items-center justify-center shrink-0">
+                    <svg className="w-5 h-5 text-green-400" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19 11V9h-6V3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-8h-2zm-6 8H9v-2h4v2zm4-4H7v-2h10v2zm0-4H7V9h4v2h6V9z"/>
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-semibold text-white">Google Sheet</p>
+                    <p className="text-[11px] text-gray-500">Save to your spreadsheet</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => handleChoice("phone")}
+                  disabled={status === "saving"}
+                  className="btn-press w-full py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all flex items-center gap-3 px-4 disabled:opacity-50"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-blue-600/20 flex items-center justify-center shrink-0">
+                    <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-semibold text-white">Phone Contacts</p>
+                    <p className="text-[11px] text-gray-500">Download as vCard</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => handleChoice("both")}
+                  disabled={status === "saving"}
+                  className="btn-press w-full py-3.5 rounded-2xl bg-amber-600/15 hover:bg-amber-600/25 border border-amber-600/20 transition-all flex items-center gap-3 px-4 disabled:opacity-50"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-amber-600/20 flex items-center justify-center shrink-0">
+                    <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-semibold text-amber-300">Save to Both</p>
+                    <p className="text-[11px] text-gray-500">Sheet + Phone Contacts</p>
+                  </div>
+                </button>
+              </div>
+
+              {status === "saving" && (
+                <div className="px-6 pb-4 flex items-center justify-center gap-2 text-amber-300 text-sm">
+                  <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-[spin_0.8s_linear_infinite]" />
                   Saving...
-                </>
-              ) : (
-                <>
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                  </svg>
-                  Add to Rolodex
-                </>
+                </div>
               )}
+            </div>
+
+            <button
+              onClick={() => setStatus("review")}
+              className="w-full mt-2 py-3 rounded-2xl bg-gray-800 hover:bg-gray-700 text-gray-400 text-sm font-medium transition-all"
+            >
+              Cancel
             </button>
           </div>
         </div>

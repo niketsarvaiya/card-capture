@@ -112,6 +112,34 @@ export default function CaptureScreen() {
     }
   }
 
+  function saveToPhone() {
+    const nameParts = lead.name.trim().split(/\s+/);
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.slice(1).join(" ");
+    const vcf = [
+      "BEGIN:VCARD",
+      "VERSION:3.0",
+      `N:${lastName};${firstName};;;`,
+      `FN:${lead.name}`,
+      lead.phone ? `TEL;TYPE=CELL:${lead.phone}` : "",
+      lead.email ? `EMAIL:${lead.email}` : "",
+      lead.company ? `ORG:${lead.company}` : "",
+      lead.designation ? `TITLE:${lead.designation}` : "",
+      lead.website ? `URL:${lead.website}` : "",
+      lead.address ? `ADR;TYPE=WORK:;;${lead.address.replace(/\n/g, " ")};;;;` : "",
+      lead.notes ? `NOTE:${lead.notes.replace(/\n/g, " ")}` : "",
+      "END:VCARD",
+    ].filter(Boolean).join("\n");
+
+    const blob = new Blob([vcf], { type: "text/vcard" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${lead.name || "contact"}.vcf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function reset() {
     setLead(emptyLead);
     setImageData(null);
@@ -136,12 +164,23 @@ export default function CaptureScreen() {
           <p className="text-gray-500 mb-8 text-sm">
             {lead.name || "New contact"} added to your Rolodex
           </p>
-          <button
-            onClick={reset}
-            className="btn-press px-10 py-4 bg-amber-600 hover:bg-amber-500 text-gray-950 rounded-2xl font-semibold text-base shadow-lg transition-all"
-          >
-            Add Next Contact
-          </button>
+          <div className="space-y-3 w-full max-w-xs">
+            <button
+              onClick={saveToPhone}
+              className="btn-press w-full py-4 bg-white/10 hover:bg-white/15 rounded-2xl font-semibold text-base transition-all flex items-center justify-center gap-2.5 border border-white/10"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+              Save to Phone Contacts
+            </button>
+            <button
+              onClick={reset}
+              className="btn-press w-full py-4 bg-amber-600 hover:bg-amber-500 text-gray-950 rounded-2xl font-semibold text-base shadow-lg transition-all"
+            >
+              Scan Next Card
+            </button>
+          </div>
         </div>
       </div>
     );

@@ -19,13 +19,13 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#0f172a",
+  themeColor: "#030712",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.className}>
-      <body className="bg-slate-950 text-white min-h-dvh">
+      <body className="min-h-dvh antialiased">
         {children}
       </body>
     </html>

@@ -45,7 +45,8 @@ export async function POST(req: NextRequest) {
 
     return Response.json({ ok: true });
   } catch (error) {
-    console.error("Save error:", error);
-    return Response.json({ error: "Failed to save to Google Sheet" }, { status: 500 });
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("Save error:", msg);
+    return Response.json({ error: msg }, { status: 500 });
   }
 }

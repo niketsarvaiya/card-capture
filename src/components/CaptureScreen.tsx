@@ -107,7 +107,8 @@ export default function CaptureScreen() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ lead, image: imageData }),
         });
-        if (!res.ok) throw new Error("Save to sheet failed");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Save to sheet failed");
         const count = parseInt(localStorage.getItem("rolodex_count") || "0") + 1;
         localStorage.setItem("rolodex_count", String(count));
       }
@@ -115,8 +116,9 @@ export default function CaptureScreen() {
         await saveToPhone();
       }
       setStatus("success");
-    } catch {
-      setErrorMsg("Save failed — check connection");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      setErrorMsg(msg);
       setStatus("review");
     }
   }

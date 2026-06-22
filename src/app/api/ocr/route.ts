@@ -26,7 +26,15 @@ export async function POST(req: NextRequest) {
             },
             {
               type: "text",
-              text: `This is a photo of a business/visiting card. Extract all contact details and return ONLY valid JSON with these fields: name, phone, email, company, designation, website, address. Use empty string for missing fields. For phone, include country code if visible. Clean up formatting.`,
+              text: `Extract contact details from this business card photo. Return ONLY a JSON object with EXACTLY these fields (no extra fields):
+- "name": full name
+- "phone": all phone/mobile numbers, comma-separated if multiple, with country code
+- "email": email address
+- "company": company/organization name
+- "designation": job title/role
+- "website": website URL
+- "address": full address
+Use empty string "" for any field not found on the card.`,
             },
           ],
         },
@@ -36,7 +44,22 @@ export async function POST(req: NextRequest) {
     const content = message.content[0];
     const text = content.type === "text" ? content.text : "";
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    const structured = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+    const raw = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+
+    // Merge any extra phone/mobile fields into phone
+    const phones = [raw.phone, raw.mobile, raw.tel, raw.telephone]
+      .filter(Boolean)
+      .join(", ");
+
+    const structured = {
+      name: raw.name || raw.full_name || "",
+      phone: phones,
+      email: raw.email || "",
+      company: raw.company || raw.organization || raw.org || "",
+      designation: raw.designation || raw.title || raw.role || raw.position || "",
+      website: raw.website || raw.url || "",
+      address: raw.address || "",
+    };
 
     return Response.json(structured);
   } catch (error) {

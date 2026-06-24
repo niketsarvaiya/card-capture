@@ -72,16 +72,29 @@ export default function CaptureScreen() {
     }
   }
 
-  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+  function compressImage(file: File): Promise<string> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxW = 1024;
+        const scale = Math.min(1, maxW / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.7));
+      };
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      setImageData(result);
-      processImage(result.split(",")[1]);
-    };
-    reader.readAsDataURL(file);
+    const compressed = await compressImage(file);
+    setImageData(compressed);
+    processImage(compressed.split(",")[1]);
     e.target.value = "";
   }
 
